@@ -1,0 +1,262 @@
+// 셀렉트달월 선택하면 이미지나오는부분 구현
+<%
+    Calendar  cal = Calendar.getInstance();	
+
+    int nowYear = cal.get(Calendar.YEAR);
+    int nowMonth = cal.get(Calendar.MONTH)+1;
+
+	int[] yOptions = new int[3];
+	int[][] mOptions = new int[2][12];
+	int[] mOption = new int[12];
+	String[][] imgYns = new String[2][12];
+	String[][] imgSrc = new String[2][12];
+
+	String imgStr = "";
+	
+	
+	int j = 0;
+	for(int i=1; i>=0; i--) {
+		yOptions[j] = nowYear-i;
+
+		for (int k=0; k<12; k++) {
+			mOptions[j][k] = k+1;
+			mOption[k] = k+1;
+			
+			imgSrc[j][k] = request.getSession().getServletContext().getRealPath("/") + "img/popup/fuz_newsletter_"+ yOptions[j] + "_" + mOptions[j][k] +".jpg";
+		    File file = new File(imgSrc[j][k]);
+		    String filePath = file.getAbsolutePath();
+			
+			if(file.exists()) {
+				imgStr += "," + yOptions[j] + "_" + mOptions[j][k];
+				imgYns[j][k] = "Y";
+			} else {
+				imgYns[j][k] = "N";
+			}
+		}
+
+		j++;
+	}
+
+%>
+
+// 달력 함수 구현
+<%@include file="/INC/inc_newsLetter.jsp" %>
+
+<script> 
+    /* 달력 함수 */
+    var imgStr = "<%=imgStr%>";
+    var years = [];
+    var months = [];
+
+    function submit() {
+        var year = $('#year').val();
+        opYearHtml(year);
+    }
+
+    function opYearHtml(selYear) {
+        var nowYear = "<%=nowYear%>"
+        var opYHtml = "";
+        var j=0;
+        var month = $('#month').val();
+        
+        if(selYear == "") {
+            selYear = nowYear;
+            $("#year").val(nowYear);
+        } 
+
+        for(var i=1; i>=0; i--) {
+            years[j] = nowYear-i;
+            opYHtml += "<option value='"+years[j]+"'";
+            if(selYear == years[j]) {
+                opYHtml += " selected='selected'";
+            }
+            opYHtml += ">"+years[j]+"</option>";
+            j++;
+        }
+        $("#year").html(opYHtml);
+        $(".select-items button").removeClass('disabled');
+
+        opMonthHtml(month);
+    }
+
+    function opMonthHtml(selMonth) {
+        //console.log(selMonth);
+        var nowMonth = "<%=nowMonth%>";
+        var opMHtml = "";
+        var selYear = $("#year").val();
+        var imgStrYn = "";
+        var interViewData = "";
+        
+        if(selMonth == "") {
+            selMonth = nowMonth;
+            $("#month").val(nowMonth);
+        }
+
+        for(var j=0; j<years.length; j++) {
+            if(years[j] == selYear) {
+
+                for(var i=0; i<12; i++) {
+                    months[i] = i+1;
+                    opMHtml += "<option value='"+months[i]+"'";
+
+                    if(selMonth == months[i]) {
+                        opMHtml += " selected='selected'";
+                        if( Number(selMonth) === 6 ){
+                            $("#img").html("<a href='javascript:;' id='inter-view-"+ Number(selMonth) +"'><img id='' src='/img/popup/fuz_newsletter_"+ selYear + "_" + selMonth +".jpg' alt='' /></a>");
+                            interViewData =  '<li class="swiper-slide"><img src="interview" alt=""></li>';
+                            interViewData += '<li class="swiper-slide"><img src="interview" alt=""></li>';
+                            interViewData += '<li class="swiper-slide"><img src="interview" alt=""></li>';
+                            interViewData += '<li class="swiper-slide"><img src="interview" alt=""></li>';
+                            $('.inter-view-list').html(interViewData);
+                        } else if( Number(selMonth) === 7) {
+                            $("#img").html("<a href='javascript:;' id='inter-view-"+ Number(selMonth) +"'><img id='' src='newsletter_"+ selYear + "_" + selMonth +".jpg' alt='' /></a>");
+                            interViewData =  '<li class="swiper-slide"><img src="interview" alt=""></li>';
+                            interViewData += '<li class="swiper-slide"><img src="interview" alt=""></li>';
+                            $('.inter-view-list').html(interViewData);
+                        } else {
+                            $("#img").html("<img id='' src='newsletter_"+ selYear + "_" + selMonth +".jpg' alt='' />");
+                        }
+                        $('#month').siblings('.select-selected').text(selMonth);
+                    }
+
+                    var imgStrs = imgStr.split(',');
+                    imgStrYn = "N";
+                    for(var k=0; k<imgStrs.length; k++) {
+
+                        if(imgStrs[k] == (selYear+"_"+months[i])) {
+                            imgStrYn = "Y"
+                        }
+                    }
+
+                    if(imgStrYn != "Y") {
+                        opMHtml += " disabled";
+                        $('#month').siblings('.select-items').children().each(function() {
+                            if(months[i] == $(this).text()) {
+                                $(this).addClass('disabled');
+                            }
+                        })
+                    }
+                    opMHtml += ">"+months[i]+"</option>";
+                }
+                $("#month").html(opMHtml);
+
+            }
+        }
+
+    }
+
+    $(function(){
+        opYearHtml('');
+        opChange();
+    });
+
+// 셀렉트 웹브라우징 커스터마이징, 셀렉트 기능구현
+<script> /* select 선택,값 함수 */
+function opChange() {
+    var x, i, j, l, ll, selElmnt, a, b, c;
+    x = document.getElementsByClassName("custom-select");
+    l = x.length;
+    for (i = 0; i < l; i++) {
+        selElmnt = x[i].getElementsByTagName("select")[0];
+        ll = selElmnt.length;
+        a = document.createElement("DIV");
+        a.setAttribute("class", "select-selected");
+        a.innerHTML = selElmnt.options[selElmnt.selectedIndex].innerHTML;
+        x[i].appendChild(a);
+
+        b = document.createElement("DIV");
+        b.setAttribute("class", "select-items select-hide");
+        for (j = 0; j < ll; j++) {
+            c = document.createElement("button");
+            c.innerHTML = selElmnt.options[j].innerHTML;
+            c.addEventListener("click", function(e) {
+                var y, i, k, s, h, sl, yl;
+                s = this.parentNode.parentNode.getElementsByTagName("select")[0];
+                sl = s.length;
+                h = this.parentNode.previousSibling;
+                for (i = 0; i < sl; i++) {
+                    if (s.options[i].innerHTML == this.innerHTML) {
+                        s.selectedIndex = i;
+                        h.innerHTML = this.innerHTML;
+                        y = this.parentNode.getElementsByClassName("same-as-selected");
+                        yl = y.length;
+
+                        for (k = 0; k < yl; k++) {
+                            y[k].removeAttribute("class");
+                        }
+                        this.setAttribute("class", "same-as-selected");
+                        submit();
+                        break;
+                    }
+                }
+                h.click();
+            });
+            b.appendChild(c);
+        }
+        x[i].appendChild(b);
+        a.addEventListener("click", function(e) {
+            e.stopPropagation();
+            this.nextSibling.classList.toggle("select-hide");
+            this.classList.toggle("select-arrow-active");
+            submit();
+        }),setTimeout (function(){
+            closeAllSelect(this);
+        }, 100);
+        clearTimeout();
+    }
+}
+
+function closeAllSelect(elmnt) {
+    var x, y, i, xl, yl, arrNo = [];
+    x = document.getElementsByClassName("select-items");
+    y = document.getElementsByClassName("select-selected");
+    xl = x.length;
+    yl = y.length;
+    for (i = 0; i < yl; i++) {
+        if (elmnt == y[i]) {
+            arrNo.push(i)
+        } else {
+            y[i].classList.remove("select-arrow-active");
+        }
+    }
+    for (i = 0; i < xl; i++) {
+        if (arrNo.indexOf(i)) {
+            x[i].classList.add("select-hide");
+        }
+    }
+}
+document.addEventListener("click", closeAllSelect);
+
+$(function(){
+    var nowYear = "<%=nowYear%>";
+    var nowMonth = "<%=nowMonth%>";
+    $("#year option").each(function() {
+        if($(this).val() == nowYear) {
+            $(this).attr('selected',true);
+            $(this).parent().siblings('.select-selected').text($(this).val());
+        }
+    })
+
+    $("#month option").each(function() {
+        console.log(nowMonth);
+        if($(this).val() == nowMonth) {
+            $(this).attr('selected',true);
+            $(this).parent().siblings('.select-selected').text($(this).val());
+            if(Number(nowMonth) === 7){
+                $("#img").html("<a href='javascript:;' id='inter-view-"+ Number(nowMonth) +"'><img id='' src='/img/popup/fuz_newsletter_"+ nowYear + "_" + nowMonth +".jpg' alt='' /></a>");
+            } else {
+                $("#img").html("<img id='' src='/img/popup/fuz_newsletter_"+ nowYear + "_" + nowMonth +".jpg' alt='' />");
+            }
+        }
+        if($(this).attr("disabled")) {
+            var nowVal = $(this).val();
+            $('#month').siblings('.select-items').children().each(function() {
+                if(nowVal == $(this).text()) {
+                    $(this).addClass('disabled');
+                }
+            })
+        }
+    });
+
+});
+</script>
